@@ -17,10 +17,10 @@ void sdl_frect_init(SDL_FRect *r, float x, float y, float w, float h) {
   r->h = h;
 }
 void sdl_color_init(SDL_Color *c, Uint8 r, Uint8 g, Uint8 b, Uint8 a) {
-    c->r = r;
-    c->g = g;
-    c->b = b;
-    c->a = a;
+  c->r = r;
+  c->g = g;
+  c->b = b;
+  c->a = a;
 }
 
 const Uint32 SDL_EVENT_FIRST_ = SDL_EVENT_FIRST;
@@ -42,6 +42,8 @@ const Uint32 SDL_EVENT_WINDOW_FOCUS_LOST_ = SDL_EVENT_WINDOW_FOCUS_LOST;
 const Uint32 SDL_EVENT_WINDOW_CLOSE_REQUESTED_ = SDL_EVENT_WINDOW_CLOSE_REQUESTED;
 const Uint32 SDL_EVENT_KEY_DOWN_ = SDL_EVENT_KEY_DOWN;
 const Uint32 SDL_EVENT_KEY_UP_ = SDL_EVENT_KEY_UP;
+const Uint32 SDL_EVENT_TEXT_EDITING_ = SDL_EVENT_TEXT_EDITING;
+const Uint32 SDL_EVENT_TEXT_INPUT_ = SDL_EVENT_TEXT_INPUT;
 const Uint32 SDL_EVENT_MOUSE_MOTION_ = SDL_EVENT_MOUSE_MOTION;
 const Uint32 SDL_EVENT_MOUSE_BUTTON_DOWN_ = SDL_EVENT_MOUSE_BUTTON_DOWN;
 const Uint32 SDL_EVENT_MOUSE_BUTTON_UP_ = SDL_EVENT_MOUSE_BUTTON_UP;
@@ -54,6 +56,7 @@ Uint16 sdl_keyboard_event_mod(SDL_KeyboardEvent *e) { return e->mod; }
 bool sdl_keyboard_event_down(SDL_KeyboardEvent *e) { return e->down; }
 bool sdl_keyboard_event_repeat(SDL_KeyboardEvent *e) { return e->repeat; }
 
+const char *sdl_text_input_event_text(SDL_TextInputEvent *e) { return e->text; }
 
 const Uint64 SDL_WINDOW_FULLSCREEN_ = SDL_WINDOW_FULLSCREEN;
 const Uint64 SDL_WINDOW_OPENGL_ = SDL_WINDOW_OPENGL;

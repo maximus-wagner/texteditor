@@ -1,20 +1,21 @@
 (load (merge-pathnames #p"quicklisp/setup.lisp" (user-homedir-pathname)))
-(ql:quickload '(:cffi :sdl3))
+(ql:quickload '(:cffi :cffi-libffi))
 
 ;; (do-external-symbols (sym :sdl3) (print sym))
 
 (load "src/sdl.lisp")
+(load "src/state.lisp")
+(load "src/utils.lisp")
+(load "src/command-frame.lisp")
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (unless (find-package :main)
     (defpackage :main
-      (:use :cl)
+      (:use :cl :state :utils)
       ;; (:local-nicknames (:metrics :lists.metrics))
       )))
 (in-package :main)
 (require 'uiop)
-
-(defparameter *renderer* nil)
 
 (defparameter *running* t)
 
@@ -24,18 +25,27 @@
   (setf *running* nil))
 
 (defun handle-key-down (event)
-  (format t "Got key-down~%")
-  (let ((key (sdl:keyboard-event-key event)))
-    (format t "Got key: ~a~%" key)
+  (let ((key (sdl:get-key-from-scancode
+              (sdl:keyboard-event-scancode event)
+              (sdl:keyboard-event-mod event)
+              nil)))
+    (fmteo "key: ~a~%" key)
+    (command-frame:handle-key key)
+    (when (= key (char-code #\:))
+      (command-frame:show))
     (when (= key (char-code #\q))
-      (format t "Got q~%")
       (setf *running* nil))))
+
+(defun handle-text-input (event)
+  (fmteo "got text input event~%")
+  (let ((text (sdl:text-input-event-text event)))
+    (fmteo "got text input: ~a~%" text)))
 
 (defparameter *font-size-px* 16.0)
 (defparameter *font* nil)
 (defun get-font ()
   (when (not *font*)
-    (setf *font* (sdl3-ttf:open-font
+    (setf *font* (sdl:ttf-open-font
                   (namestring
                    (merge-pathnames #p".local/share/fonts/FiraCode-VF.ttf"
                                     (user-homedir-pathname)))
@@ -75,6 +85,7 @@
   (when (fps-tick *fps*)
     (setf *last-fps* (fps-state-fps *fps*)))
 
+  (sdl:set-render-draw-color *renderer* '(#x33 #x33 #x33 #xff))
   (sdl:render-clear *renderer*)
   (when *last-fps*
     (let ((texture (create-texture-from-text
@@ -83,6 +94,7 @@
         (destructuring-bind (rw rh) (sdl:get-render-output-size *renderer*)
           (sdl:render-texture *renderer* texture nil (list (- rw w 4) (- rh h) w h))))
       (sdl:destroy-texture texture)))
+  (command-frame:render)
   (sdl:render-present *renderer*))
 
 (defun loop-events ()
@@ -92,19 +104,18 @@
                    do (case (sdl:event-type event)
                         (:quit (handle-quit event))
                         (:key-down (handle-key-down event))
-                        (otherwise nil))))
+                        (:text-input (handle-text-input event))
+                        (otherwise (fmteo "unknown event ~a~%" (sdl:event-type event))))))
         (render-state)
         ))
-
-(defun fmteo (&rest args)
-  (apply #'format *error-output* args))
 
 (defun main ()
   (sdl:init '(:video :events))
   (fmteo "SDL version: ~a, revision: ~a~%" (sdl:get-version) (sdl:get-revision))
+  (fmteo "SDL-TTF version: ~a~%" (sdl:ttf-version))
   (fmteo "Forcing Vulkan render driver~%") 
   (sdl:set-hint "SDL_RENDER_DRIVER" "vulkan") ; opengl software
-  (sdl3-ttf:init)
+  (sdl:ttf-init)
   (multiple-value-bind (rst window *renderer*)
       (sdl:create-window-and-renderer "Text Editor Window" 500 500 '(:resizable))
     (if rst
@@ -119,6 +130,6 @@
           (sdl:destroy-renderer *renderer*)
           (sdl:destroy-window window))
         (format *error-output* "SDL Error: ~a~%" (sdl:get-error)))
-    (sdl3-ttf:quit)
+    (sdl:ttf-quit)
     (sdl:quit)))
 (export 'main)

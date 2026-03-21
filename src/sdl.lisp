@@ -14,12 +14,21 @@
 (defun read-foreign-size (name)
   (cffi:mem-ref (cffi:foreign-symbol-pointer name) :size))
 
+(pushnew #p"/usr/local/lib64/" cffi:*foreign-library-directories*)
+
 (cffi:define-foreign-library libsdl3
   (:darwin "libSDL3.dylib")
   (:unix   "libSDL3.so")
   (:windows "SDL3.dll")
-  (t (:default "libSDL3")))
+  (t (:default "SDL3")))
 (cffi:use-foreign-library libsdl3)
+
+(cffi:define-foreign-library libsdl3-ttf
+  (:darwin "libSDL3_ttf.dylib")
+  (:unix   "libSDL3_ttf.so")
+  (:windows "SDL3_ttf.dll")
+  (t (:default "SDL3_ttf")))
+(cffi:use-foreign-library libsdl3-ttf)
 
 (cffi:load-foreign-library
  (merge-pathnames #p"libsdl-struct-accessors.so" (uiop:getcwd)))
@@ -109,9 +118,8 @@
                        title width height
                        (apply #'logior (mapcar #'get-flag flags))
                        window renderer)))
-        (values (list (cffi:mem-ref window :pointer)
-                      (cffi:mem-ref renderer :pointer))
-                success?)))))
+        (values
+         success? (cffi:mem-ref window :pointer) (cffi:mem-ref renderer :pointer))))))
 (export 'create-window-and-renderer)
 
 (cffi:defcfun ("SDL_DestroyRenderer" destroy-renderer) :void (renderer :pointer))
@@ -128,6 +136,10 @@
 
 (cffi:defcfun ("SDL_GetError" get-error) :string)
 (export 'get-error)
+
+(cffi:defcfun ("SDL_GetKeyFromScancode" get-key-from-scancode) :uint32
+  (scancode :int) (modstate :uint16) (key-event :bool))
+(export 'get-key-from-scancode)
 
 (cffi:defcenum renderer-logical-presentation
   :disabled :stretch :letterbox :overscan :integer-scale)
@@ -200,8 +212,21 @@
 (cffi:defcfun ("SDL_RenderClear" render-clear) :bool (renderer :pointer))
 (export 'render-clear)
 
+(cffi:defcfun ("SDL_RenderFillRect" %render-fill-rect) :bool
+  (renderer :pointer) (rect :pointer))
+(defun render-fill-rect (renderer rect-vals)
+  (with-frect (rect rect-vals)
+    (%render-fill-rect renderer rect)))
+(export 'render-fill-rect)
+
 (cffi:defcfun ("SDL_RenderPresent" render-present) :bool (renderer :pointer))
 (export 'render-present)
+
+(cffi:defcfun ("SDL_RenderRect" %render-rect) :bool (renderer :pointer) (rect :pointer))
+(defun render-rect (renderer rect-vals)
+  (with-frect (rect rect-vals)
+    (%render-rect renderer rect)))
+(export 'render-rect)
 
 (cffi:defcfun ("SDL_RenderTexture" %render-texture) :bool
   (renderer :pointer) (texture :pointer) (src-frect :pointer) (dst-frect :pointer))
@@ -213,6 +238,13 @@
 
 (cffi:defcfun ("SDL_SetHint" set-hint) :bool (name :string) (value :string))
 (export 'set-hint)
+
+(cffi:defcfun ("SDL_SetRenderDrawColor" %set-render-draw-color) :bool
+  (renderer :pointer) (r :uint8) (g :uint8) (b :uint8) (a :uint8))
+(defun set-render-draw-color (renderer color-vals)
+  (destructuring-bind (r g b a) color-vals
+    (%set-render-draw-color renderer r g b a)))
+(export 'set-render-draw-color)
 
 (cffi:defcfun ("SDL_SetRenderLogicalPresentation" set-render-logical-presentation) :bool
   (renderer :pointer) (w :int) (h :int) (mode renderer-logical-presentation))
@@ -242,6 +274,8 @@
         :window-close-requested (read-foreign-uint32 "SDL_EVENT_WINDOW_CLOSE_REQUESTED_")
         :key-down (read-foreign-uint32 "SDL_EVENT_KEY_DOWN_")
         :key-up (read-foreign-uint32 "SDL_EVENT_KEY_UP_")
+        :text-editing (read-foreign-uint32 "SDL_EVENT_TEXT_EDITING_")
+        :text-input (read-foreign-uint32 "SDL_EVENT_TEXT_INPUT_")
         :mouse-motion (read-foreign-uint32 "SDL_EVENT_MOUSE_MOTION_")
         :mouse-button-down (read-foreign-uint32 "SDL_EVENT_MOUSE_BUTTON_DOWN_")
         :mouse-button-up (read-foreign-uint32 "SDL_EVENT_MOUSE_BUTTON_UP_")
@@ -267,3 +301,28 @@
 (export 'keyboard-event-down)
 (cffi:defcfun ("sdl_keyboard_event_repeat" keyboard-event-repeat) :bool (e :pointer))
 (export 'keyboard-event-repeat)
+(cffi:defcfun ("sdl_text_input_event_text" text-input-event-text) :string (e :pointer))
+(export 'text-input-event-text)
+
+;;
+;; SDL-TTF
+;;
+
+(cffi:defcfun ("TTF_Init" ttf-init) :bool)
+(export 'ttf-init)
+
+(cffi:defcfun ("TTF_OpenFont" ttf-open-font) :pointer (file :string) (ptsize :float))
+(export 'ttf-open-font)
+
+(cffi:defcfun ("TTF_Quit" ttf-quit) :void)
+(export 'ttf-quit)
+
+(cffi:defcfun ("TTF_RenderText_Blended" %ttf-render-text-blended) :pointer
+  (font :pointer) (text :string) (length :size) (fg (:struct color)))
+(defun ttf-render-text-blended (font text fg-color)
+  (with-color (fgc fg-color)
+    (%ttf-render-text-blended font text (length text) (color-value fgc))))
+(export 'ttf-render-text-blended)
+
+(cffi:defcfun ("TTF_Version" ttf-version) :int)
+(export 'ttf-version)
