@@ -5,6 +5,7 @@
 
 (load "src/sdl.lisp")
 (load "src/state.lisp")
+(load "src/cursor.lisp")
 (load "src/utils.lisp")
 (load "src/command-frame.lisp")
 
@@ -41,17 +42,6 @@
   (let ((text (sdl:text-input-event-text event)))
     (fmteo "got text input: ~a~%" text)))
 
-(defparameter *font-size-px* 16.0)
-(defparameter *font* nil)
-(defun get-font ()
-  (when (not *font*)
-    (setf *font* (sdl:ttf-open-font
-                  (namestring
-                   (merge-pathnames #p".local/share/fonts/FiraCode-VF.ttf"
-                                    (user-homedir-pathname)))
-                  *font-size-px*)))
-  *font*)
-      
 (defstruct fps-state
   (frames 0 :type fixnum)
   (window-start 0 :type (unsigned-byte 64))
@@ -73,11 +63,6 @@
 
 (defparameter *fps* nil)
 (defparameter *last-fps* nil)
-
-(defun create-texture-from-text (text)
-  (sdl:create-texture-from-surface
-   *renderer* 
-   (sdl:ttf-render-text-blended (get-font) text '(#xee #xee #xee #xff))))
 
 (defun render-state ()
   (when (not *fps*)
