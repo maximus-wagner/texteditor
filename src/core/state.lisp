@@ -1,17 +1,15 @@
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (unless (find-package :state)
-    (defpackage :state
-      (:use :cl)
-      )))
-(in-package :state)
+;;;; core/state.lisp -- Global application state
+
+(defpackage :core.state
+  (:use :cl :sdl))
+
+(in-package :core.state)
 
 (defparameter *renderer* nil)
 (export '*renderer*)
 
 (defparameter *font-size-px* 16.0)
-(export '*font-size-px*)
 (defparameter *font* nil)
-(export '*font*)
 
 (defparameter *font-paths*
   (list

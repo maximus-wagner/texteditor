@@ -48,6 +48,10 @@ const Uint32 SDL_EVENT_MOUSE_MOTION_ = SDL_EVENT_MOUSE_MOTION;
 const Uint32 SDL_EVENT_MOUSE_BUTTON_DOWN_ = SDL_EVENT_MOUSE_BUTTON_DOWN;
 const Uint32 SDL_EVENT_MOUSE_BUTTON_UP_ = SDL_EVENT_MOUSE_BUTTON_UP;
 const Uint32 SDL_EVENT_MOUSE_WHEEL_ = SDL_EVENT_MOUSE_WHEEL;
+const Uint32 SDL_EVENT_DROP_FILE_ = SDL_EVENT_DROP_FILE;
+
+/* Drop event accessor */
+const char *sdl_drop_event_data(SDL_DropEvent *e) { return e->data; }
 
 Uint32 sdl_keyboard_event_type(SDL_KeyboardEvent *e) { return e->type; }
 Uint32 sdl_keyboard_event_scancode(SDL_KeyboardEvent *e) { return e->scancode; }
@@ -57,6 +61,22 @@ bool sdl_keyboard_event_down(SDL_KeyboardEvent *e) { return e->down; }
 bool sdl_keyboard_event_repeat(SDL_KeyboardEvent *e) { return e->repeat; }
 
 const char *sdl_text_input_event_text(SDL_TextInputEvent *e) { return e->text; }
+
+/* Mouse button event accessors */
+float sdl_mouse_button_event_x(SDL_MouseButtonEvent *e) { return e->x; }
+float sdl_mouse_button_event_y(SDL_MouseButtonEvent *e) { return e->y; }
+Uint8 sdl_mouse_button_event_button(SDL_MouseButtonEvent *e) { return e->button; }
+Uint8 sdl_mouse_button_event_clicks(SDL_MouseButtonEvent *e) { return e->clicks; }
+bool sdl_mouse_button_event_down(SDL_MouseButtonEvent *e) { return e->down; }
+
+/* Mouse motion event accessors */
+float sdl_mouse_motion_event_x(SDL_MouseMotionEvent *e) { return e->x; }
+float sdl_mouse_motion_event_y(SDL_MouseMotionEvent *e) { return e->y; }
+Uint32 sdl_mouse_motion_event_state(SDL_MouseMotionEvent *e) { return e->state; }
+
+/* Mouse wheel event accessors */
+float sdl_mouse_wheel_event_x(SDL_MouseWheelEvent *e) { return e->x; }
+float sdl_mouse_wheel_event_y(SDL_MouseWheelEvent *e) { return e->y; }
 
 const Uint64 SDL_WINDOW_FULLSCREEN_ = SDL_WINDOW_FULLSCREEN;
 const Uint64 SDL_WINDOW_OPENGL_ = SDL_WINDOW_OPENGL;

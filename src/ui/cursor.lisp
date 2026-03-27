@@ -1,9 +1,11 @@
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (unless (find-package :cursor)
-    (defpackage :cursor
-      (:use :cl :state)
-      )))
-(in-package :cursor)
+;;;; ui/cursor.lisp -- Blinking cursor component
+;;;;
+;;;; This module provides a cursor component that renders a blinking cursor.
+
+(defpackage :ui.cursor
+  (:use :cl))
+
+(in-package :ui.cursor)
 
 (defparameter +height+ 16)
 (defparameter +period-ms+ 1000)
@@ -16,6 +18,7 @@
 
 (defgeneric render (cursor))
 (export 'render)
+
 (defmethod render ((c cursor))
   (when (> (- (sdl:get-ticks) (period-start c)) +period-ms+)
     (setf (period-start c) (sdl:get-ticks)))
